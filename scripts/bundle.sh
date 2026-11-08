@@ -47,6 +47,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
+  <key>NSRemindersUsageDescription</key><string>Show and edit your Apple Reminders in the notch.</string>
+  <key>NSRemindersFullAccessUsageDescription</key><string>Show and edit your Apple Reminders in the notch.</string>
   <key>NSHumanReadableCopyright</key><string>© 2026 MID JUG 3 Nine. MIT License.</string>
 </dict>
 </plist>

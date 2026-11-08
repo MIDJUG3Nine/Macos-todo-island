@@ -65,6 +65,10 @@ public struct IslandSettings: Codable, Equatable, Sendable {
     public var showOnScreensWithoutNotch: Bool
     /// Remember the last panel instead of always opening `defaultPanel`.
     public var rememberLastPanel: Bool
+    /// Where todos come from. Local by default.
+    public var todoSource: TodoSource
+    /// Apple Reminders list (calendar identifier). Nil means the default Reminders list.
+    public var remindersListID: String?
 
     public static let hoverDelayRange: ClosedRange<Double> = 0...1.5
     public static let collapseDelayRange: ClosedRange<Double> = 0...2
@@ -76,7 +80,9 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         collapseDelay: Double = 0.4,
         panelSize: PanelSize = .regular,
         showOnScreensWithoutNotch: Bool = true,
-        rememberLastPanel: Bool = false
+        rememberLastPanel: Bool = false,
+        todoSource: TodoSource = .local,
+        remindersListID: String? = nil
     ) {
         self.defaultPanel = defaultPanel
         self.enabledPanels = enabledPanels
@@ -85,6 +91,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
         self.panelSize = panelSize
         self.showOnScreensWithoutNotch = showOnScreensWithoutNotch
         self.rememberLastPanel = rememberLastPanel
+        self.todoSource = todoSource
+        self.remindersListID = remindersListID
     }
 
     public init(from decoder: Decoder) throws {
@@ -104,6 +112,8 @@ public struct IslandSettings: Codable, Equatable, Sendable {
             ?? defaults.showOnScreensWithoutNotch
         rememberLastPanel = (try? c.decodeIfPresent(Bool.self, forKey: .rememberLastPanel))
             ?? defaults.rememberLastPanel
+        todoSource = (try? c.decodeIfPresent(TodoSource.self, forKey: .todoSource)) ?? defaults.todoSource
+        remindersListID = (try? c.decodeIfPresent(String.self, forKey: .remindersListID)) ?? nil
         self = normalized()
     }
 

@@ -85,7 +85,10 @@ struct TodoPanelView: View {
 
     private var remainingText: String {
         let open = store.list.openCount
-        return language == .chinese ? "还剩 \(open) 项" : (open == 1 ? "1 left" : "\(open) left")
+        let count = language == .chinese ? "还剩 \(open) 项" : (open == 1 ? "1 left" : "\(open) left")
+        guard store.source == .reminders else { return count }
+        let listName = store.remindersListTitle ?? TodoSource.reminders.title(language)
+        return "\(count) · \(listName)"
     }
 
     private func add() {

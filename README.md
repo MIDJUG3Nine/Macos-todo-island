@@ -14,10 +14,13 @@ drops down; move away and it tucks back in.
   click somewhere else or press <kbd>Esc</kbd>. There is also a pin button.
 - **Todo first, more panels if you want.** Todo is the default. A Notes scratchpad is built
   in, and you can choose which panels appear and which one opens first.
+- **Use Apple Reminders if you like.** Keep todos on this Mac (default), or pick a
+  Reminders list: what you add, tick, edit or delete in the island syncs to Reminders and
+  your iPhone. "Clear completed" only hides finished reminders, it never deletes them.
 - **No notch? Still works.** On Macs without a notch, or external displays, a small pill
   sits in the middle of the menu bar (can be turned off).
 - **Local and private.** Plain JSON files in `~/Library/Application Support/TodoIsland`.
-  No account, no network, no analytics.
+  No account, no network, no analytics. Reminders access is asked for only if you turn it on.
 - English and Simplified Chinese UI, following your system language.
 
 ## Install
@@ -55,8 +58,10 @@ bundled app).
 | Close | Move away (if not pinned), click elsewhere, or press <kbd>Esc</kbd> |
 | Settings | Gear button, or menu bar icon → Settings… |
 
-Settings: default panel, which panels are shown, reopen last panel, size, hover and close
-delays, the pill on screens without a notch, and open at login.
+Settings: todo source (this Mac or an Apple Reminders list), default panel, which panels
+are shown, reopen last panel, size, hover and close delays, the pill on screens without a
+notch, and open at login. Apple Reminders needs the bundled app, because macOS asks for
+permission through its Info.plist.
 
 ## How it works
 
@@ -89,8 +94,8 @@ swift build
 swift test
 ```
 
-Ideas for later: a global keyboard shortcut, drag to reorder, due dates, syncing with
-Apple Reminders, more panels (calendar, clipboard). Issues and pull requests are welcome.
+Ideas for later: a global keyboard shortcut, drag to reorder, due dates, more panels
+(calendar, clipboard). Issues and pull requests are welcome.
 
 ## License
 

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import TodoIslandCore
 
 @MainActor
@@ -10,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var island: IslandController!
     private var statusItem: StatusItemController!
     private let settingsWindow = SettingsWindowController()
+    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if quitIfAlreadyRunning() { return }
@@ -17,6 +19,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settings = SettingsModel()
         todos = TodoStore()
         notes = NotesStore()
+
+        todos.configure(source: settings.settings.todoSource, remindersListID: settings.settings.remindersListID)
+        settings.$settings
+            .sink { [weak self] newValue in
+                self?.todos.configure(source: newValue.todoSource, remindersListID: newValue.remindersListID)
+            }
+            .store(in: &cancellables)
 
         island = IslandController(settings: settings, todos: todos, notes: notes, language: language)
         island.openSettings = { [weak self] in self?.showSettings() }
@@ -33,7 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showSettings() {
         island.collapse()
-        settingsWindow.show(settings: settings, language: language)
+        settingsWindow.show(settings: settings, todos: todos, language: language)
     }
 
     /// A second copy would put two islands on the notch. Only applies to the bundled app.

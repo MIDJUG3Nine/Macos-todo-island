@@ -7,9 +7,9 @@ import TodoIslandCore
 final class SettingsWindowController {
     private var window: NSWindow?
 
-    func show(settings: SettingsModel, language: AppLanguage) {
+    func show(settings: SettingsModel, todos: TodoStore, language: AppLanguage) {
         if window == nil {
-            let hosting = NSHostingController(rootView: SettingsView(settings: settings, language: language))
+            let hosting = NSHostingController(rootView: SettingsView(settings: settings, todos: todos, language: language))
             let newWindow = NSWindow(contentViewController: hosting)
             newWindow.title = language.pick(en: "Todo Island Settings", zh: "Todo Island 设置")
             newWindow.styleMask = [.titled, .closable]
@@ -24,6 +24,7 @@ final class SettingsWindowController {
 
 struct SettingsView: View {
     @ObservedObject var settings: SettingsModel
+    @ObservedObject var todos: TodoStore
     let language: AppLanguage
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -48,6 +49,36 @@ struct SettingsView: View {
                     language.pick(en: "Reopen the last panel I used", zh: "打开时回到上次的面板"),
                     isOn: $settings.settings.rememberLastPanel
                 )
+            }
+
+            Section(language.pick(en: "Todo source", zh: "待办来源")) {
+                Picker(language.pick(en: "Todos come from", zh: "待办来自"), selection: $settings.settings.todoSource) {
+                    ForEach(TodoSource.allCases) { source in
+                        Text(source.title(language)).tag(source)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                if settings.settings.todoSource == .reminders {
+                    if todos.reminderLists.isEmpty {
+                        Text(todos.problem ?? language.pick(en: "Connecting to Reminders…", zh: "正在连接提醒事项…"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Picker(language.pick(en: "List", zh: "列表"), selection: $settings.settings.remindersListID) {
+                            Text(language.pick(en: "Default list", zh: "默认列表")).tag(String?.none)
+                            ForEach(todos.reminderLists) { list in
+                                Text(list.title).tag(Optional(list.id))
+                            }
+                        }
+                    }
+                    Text(language.pick(
+                        en: "Adding, ticking, editing and deleting change your Reminders. \"Clear completed\" only hides them here.",
+                        zh: "在 Island 里添加、打勾、修改、删除都会同步到提醒事项；「清除已完成」只在这里隐藏，不会删掉提醒事项。"
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
             }
 
             Section(language.pick(en: "Behaviour", zh: "行为")) {

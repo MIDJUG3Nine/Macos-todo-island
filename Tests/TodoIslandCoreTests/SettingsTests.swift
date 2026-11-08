@@ -45,6 +45,19 @@ final class SettingsTests: XCTestCase {
         XCTAssertEqual(settings.enabledPanels, [.notes], "unknown panels are dropped")
         XCTAssertEqual(settings.hoverDelay, IslandSettings().hoverDelay)
         XCTAssertEqual(settings.panelSize, .regular)
+        XCTAssertEqual(settings.todoSource, .local)
+        XCTAssertNil(settings.remindersListID)
+    }
+
+    func testTodoSourceRoundTrip() throws {
+        var settings = IslandSettings()
+        settings.todoSource = .reminders
+        settings.remindersListID = "ABC-123"
+        let data = try JSONEncoder().encode(settings)
+        XCTAssertEqual(try JSONDecoder().decode(IslandSettings.self, from: data), settings)
+
+        let unknown = Data(#"{"todoSource":"notion"}"#.utf8)
+        XCTAssertEqual(try JSONDecoder().decode(IslandSettings.self, from: unknown).todoSource, .local)
     }
 
     func testStoreRoundTripAndGarbage() throws {
