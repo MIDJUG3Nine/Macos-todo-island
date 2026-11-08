@@ -185,12 +185,21 @@ final class IslandController {
         model.isPinned = hover.isPinned
 
         if hover.isExpanded {
-            if !model.isExpanded {
-                model.selectedPanel = settings.settings.panelToOpen(last: lastPanel)
-            }
+            guard !model.isExpanded else { return }
+            model.selectedPanel = settings.settings.panelToOpen(last: lastPanel)
+            // Grow the window first and let SwiftUI re-centre the still-closed shape with no
+            // animation (both frames are centred on the notch, so nothing moves on screen).
+            // Only on the next run loop turn start the open animation, so the island grows
+            // from the middle of the notch outwards instead of sliding in from the left.
             window.setFrame(expandedFrame, display: true)
+            window.contentView?.layoutSubtreeIfNeeded()
             window.orderFrontRegardless()
-            model.isExpanded = true
+            DispatchQueue.main.async { [weak self] in
+                Task { @MainActor in
+                    guard let self, self.hover.isExpanded else { return }
+                    self.model.isExpanded = true
+                }
+            }
         } else {
             model.isExpanded = false
             window.makeFirstResponder(nil) // end any editing right away
