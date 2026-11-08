@@ -5,8 +5,10 @@
 #   scripts/bundle.sh 0.2.0      # custom version
 #   UNIVERSAL=1 scripts/bundle.sh  # arm64 + x86_64 (needs Xcode)
 #   SCRATCH_PATH=/tmp/ti-build OUT_DIR=/tmp/ti-out scripts/bundle.sh  # build outside the repo (e.g. iCloud folders)
+#   SIGN_IDENTITY="Developer ID Application: Name (TEAMID)" scripts/bundle.sh  # sign for distribution
 #
-# The app is ad-hoc signed, not notarized. See README for how to open it the first time.
+# By default the app is ad-hoc signed (fine on your own Mac). With SIGN_IDENTITY it is signed
+# with the hardened runtime, ready for notarization; scripts/release.sh does the full release.
 set -euo pipefail
 
 VERSION="${1:-0.1.0}"
@@ -54,7 +56,14 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-codesign --force --deep --sign - "$APP"
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
+if [[ "$SIGN_IDENTITY" == "-" ]]; then
+  codesign --force --sign - "$APP"
+else
+  codesign --force --options runtime --timestamp \
+    --entitlements "$ROOT/scripts/TodoIsland.entitlements" \
+    --sign "$SIGN_IDENTITY" "$APP"
+fi
 
 rm -f "$OUT/TodoIsland-$VERSION.zip"
 (cd "$OUT" && ditto -c -k --keepParent "$APP_NAME.app" "TodoIsland-$VERSION.zip")

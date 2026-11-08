@@ -18,7 +18,11 @@
 
 ## 安装
 
-需要 macOS 13 Ventura 或更新版本。
+需要 macOS 13 Ventura 或更新版本，Apple 芯片和 Intel 都能用。
+
+### 下载
+
+在 [Releases](https://github.com/MIDJUG3Nine/Macos-todo-island/releases) 下载 `TodoIsland-<版本>.dmg`，打开后把 **Todo Island** 拖进「应用程序」。发布版用 Developer ID 签名并经过 Apple 公证，可以直接打开。
 
 ### 从源码构建
 
@@ -29,8 +33,10 @@ scripts/bundle.sh          # 生成 build/Todo Island.app
 open "build/Todo Island.app"
 ```
 
-想长期使用就把 `Todo Island.app` 拖进「应用程序」。App 只做了本地签名、没有公证，下载来的版本第一次打开可能被拦：右键 App，选「打开」，再点「打开」（或者运行
+想长期使用就把 `Todo Island.app` 拖进「应用程序」。本地构建只做了 ad-hoc 签名，在构建它的那台 Mac 上可以直接用；拷到别的 Mac 上第一次打开会被拦，这时打开「系统设置 > 隐私与安全性」点「仍要打开」（或者运行
 `xattr -dr com.apple.quarantine "/Applications/Todo Island.app"`）。
+
+想自己做签名和公证的发布版，看 `scripts/release.sh` 开头的说明。
 
 开发时也可以直接 `swift run TodoIsland`（开机自启需要打包后的 App）。
 
