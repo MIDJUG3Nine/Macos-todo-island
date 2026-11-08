@@ -26,6 +26,27 @@ echo "==> Building and signing $VERSION"
 UNIVERSAL="${UNIVERSAL:-1}" SIGN_IDENTITY="$SIGN_IDENTITY" OUT_DIR="$OUT" "$ROOT/scripts/bundle.sh" "$VERSION"
 codesign --verify --strict --verbose=2 "$APP"
 
+notarize() {
+  echo "==> Notarizing $(basename "$1") (this usually takes a few minutes)"
+  local result status id
+  result="$(xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait --output-format json)"
+  echo "$result"
+  status="$(printf '%s' "$result" | plutil -extract status raw -o - - 2>/dev/null || true)"
+  if [[ "$status" != "Accepted" ]]; then
+    id="$(printf '%s' "$result" | plutil -extract id raw -o - - 2>/dev/null || true)"
+    echo "Notarization failed (status: ${status:-unknown})." >&2
+    [[ -n "$id" ]] && xcrun notarytool log "$id" --keychain-profile "$NOTARY_PROFILE" >&2
+    exit 1
+  fi
+}
+
+# Notarize and staple the app first, so the copy inside the disk image carries its own
+# ticket and still opens offline after it is dragged into Applications.
+notarize "$ZIP"   # bundle.sh zipped the signed app
+xcrun stapler staple "$APP"
+rm -f "$ZIP"
+(cd "$OUT" && ditto -c -k --keepParent "Todo Island.app" "$(basename "$ZIP")")
+
 echo "==> Making the disk image"
 STAGE="$(mktemp -d)"
 cp -R "$APP" "$STAGE/"
@@ -34,27 +55,17 @@ rm -f "$DMG"
 hdiutil create -volname "Todo Island" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 rm -rf "$STAGE"
 codesign --force --timestamp --sign "$SIGN_IDENTITY" "$DMG"
-
-echo "==> Notarizing (this usually takes a few minutes)"
-RESULT="$(xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait --output-format json)"
-echo "$RESULT"
-STATUS="$(printf '%s' "$RESULT" | plutil -extract status raw -o - - 2>/dev/null || true)"
-if [[ "$STATUS" != "Accepted" ]]; then
-  ID="$(printf '%s' "$RESULT" | plutil -extract id raw -o - - 2>/dev/null || true)"
-  echo "Notarization failed (status: ${STATUS:-unknown})." >&2
-  [[ -n "$ID" ]] && xcrun notarytool log "$ID" --keychain-profile "$NOTARY_PROFILE" >&2
-  exit 1
-fi
-
-echo "==> Stapling"
+notarize "$DMG"
 xcrun stapler staple "$DMG"
-xcrun stapler staple "$APP"
-rm -f "$ZIP"
-(cd "$OUT" && ditto -c -k --keepParent "Todo Island.app" "$(basename "$ZIP")")
 
 echo "==> Checking with Gatekeeper"
 spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
 spctl --assess --type execute --verbose=2 "$APP"
+MNT="$(mktemp -d)"
+hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$DMG" >/dev/null
+xcrun stapler validate "$MNT/Todo Island.app"
+hdiutil detach "$MNT" >/dev/null
+rmdir "$MNT"
 
 echo
 shasum -a 256 "$DMG" "$ZIP"
