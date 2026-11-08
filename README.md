@@ -25,7 +25,13 @@ drops down; move away and it tucks back in.
 
 ## Install
 
-Requires macOS 13 Ventura or later.
+Requires macOS 13 Ventura or later. Works on Apple silicon and Intel.
+
+### Download
+
+Get `TodoIsland-<version>.dmg` from [Releases](https://github.com/MIDJUG3Nine/Macos-todo-island/releases),
+open it and drag **Todo Island** into **Applications**. Release builds are signed with a
+Developer ID and notarized by Apple, so they open normally.
 
 ### Build from source
 
@@ -36,10 +42,13 @@ scripts/bundle.sh          # builds build/Todo Island.app
 open "build/Todo Island.app"
 ```
 
-Drag `Todo Island.app` into `/Applications` to keep it. Because the app is ad-hoc signed
-and not notarized, the first launch of a downloaded copy may be blocked: right-click the
-app, choose **Open**, then **Open** again (or run
+Drag `Todo Island.app` into `/Applications` to keep it. A local build is ad-hoc signed,
+which is fine on the Mac that built it. If you copy it to another Mac, macOS will block the
+first launch: open **System Settings > Privacy & Security** and click **Open Anyway** (or run
 `xattr -dr com.apple.quarantine "/Applications/Todo Island.app"`).
+
+To make a signed, notarized release yourself, see the setup notes at the top of
+`scripts/release.sh`.
 
 For quick development runs, `swift run TodoIsland` works too (open at login needs the
 bundled app).
